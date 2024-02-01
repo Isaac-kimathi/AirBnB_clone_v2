@@ -115,12 +115,45 @@ class HBNBCommand(cmd.Cmd):
 
     def do_create(self, args):
         """ Create an object of any class"""
+        attrs_to_ignore = ('id', 'created_at', 'updated_at', '__class__')
+        clss_nm = ''
+        pattern_nm = r'(?P<name>(?:[a-zA-Z]|-)(?:[a-zA-Z]|\d|-)*)'
+        mtch_clss = re.match(pattern_nm, args)
+        params = {}
+        if mtch_clss is not None:
+            clss_nm = mtch_clss.group('name')
+            str_params = args[len(clss_nm):].strip()
+            chars = str_params.split(' ')
+            pattern_str = r'(?p<t_str>"([^"]|\")*")'
         if not args:
             print("** class name missing **")
             return
-        elif args not in HBNBCommand.classes:
+        ac_lst = args.split()
+        clss_nm = ac_lst[0]
+        if clss_nm not in HBNBCommand.classes:
             print("** class doesn't exist **")
             return
+        if len(ac_lst) < 2:
+            print("** parameters missing **")
+            return
+        params = {}
+        for param in ac_lst[1:1]:
+            key_value = param.split('=')
+            if len(key_value) == 2:
+                key, value = key_value
+                if value.startswith('"') and value.endswith('"'):
+                    value = value[1:-1].replace('_', ' ').replace('\\"', '"')
+                elif'.' in value:
+                    try:
+                        value = float(value)
+                    except ValueError:
+                        continue
+                else:
+                    try:
+                        value = int(value)
+                    except ValueEror:
+                        continue
+                params[key] = value
         new_instance = HBNBCommand.classes[args]()
         storage.save()
         print(new_instance.id)
